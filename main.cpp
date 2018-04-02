@@ -55,7 +55,7 @@ int edgPhoto() {
 
         //medianBlur( edges, edges, 7);
 
-        //blur(edges,edges,Size(7,7));
+        blur(edges,edges,Size(7,7));
 
         GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
 
