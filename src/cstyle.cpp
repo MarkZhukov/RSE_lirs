@@ -168,3 +168,4 @@ int imgLoad(int argc, char* argv[]){
     cvDestroyWindow("original");
     return 0;
 }
+

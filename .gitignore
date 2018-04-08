@@ -26,9 +26,9 @@
 *.a
 *.lib
 
- # ide 
- *.xml
- *.iml
+# ide
+*.xml
+*.iml
 
 # Executables
 *.exe

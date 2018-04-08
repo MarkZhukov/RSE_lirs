@@ -21,6 +21,7 @@ int edgeFromCamera(){
         cap >> frame; // get a new frame from camera
         cvtColor(frame, edges, CV_BGR2GRAY);
         GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
+        blur(edges, edges, Size(7,7));
         //Sobel(edges,edges,edges.depth(),1,0,3);
         Canny(edges, edges, 0, 30, 3);
         imshow("edges", edges);
@@ -34,7 +35,7 @@ int edgeFromCamera(){
 
 
 
-int edgPhoto() {
+int edgePhoto() {
     //VideoCapture cap(0);
 
     //if(!cap.isOpened())
@@ -45,7 +46,7 @@ int edgPhoto() {
 
     for(;;) {
         Mat frame = imread(
-                "/Users/lucky.mz/Documents/GitHub/RSE_lirs/sample.jpg",1
+                "/Users/lucky.mz/Documents/GitHub/RSE_lirs/img/left3.jpg",1
         );
         //cap >> frame; // get a new frame from camera
         cvtColor(frame, edges,CV_BGR2GRAY);
@@ -53,19 +54,19 @@ int edgPhoto() {
         //bilateralFilter(edges, edges,10,10*2,10*2);
 
 
-        //medianBlur( edges, edges, 7);
 
-        blur(edges,edges,Size(7,7));
 
         GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
+        //blur(edges,edges,Size(7,7));
+        //medianBlur( edges, edges, 7);
 
-        //fastNlMeansDenoisingColored(edges,edges,13,13,7,21);
+        //fastNlMeansDenoisingColored(edges,edges,3,3,7,21);
         //cvtColor(edges, edges,CV_BGR2GRAY);
 
 
-        //Sobel(edges,edges,edges.depth(),1,0,3,2);
+        Sobel(edges,edges,edges.depth(),1,0);
 
-        Canny(edges, edges, 0, 30, 3);
+        //Canny(edges, edges, 0, 30, 3);
 
         imshow("edges", edges);
         if(waitKey(30) >= 0) break;
@@ -73,8 +74,7 @@ int edgPhoto() {
     return 0;
 }
 
-int main(){
-    edgeFromCamera();
-    //edgPhoto();
+int main() {
+    edgePhoto();
     return 0;
 }
