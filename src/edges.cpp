@@ -74,3 +74,7 @@ int edgePhoto() {
     return 0;
 }
 
+int main(){
+    edgeFromCamera();
+    return 0;
+}

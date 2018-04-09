@@ -1,7 +1,7 @@
 //
 // Created by lucky.mz on 09.04.2018.
 //
-#include <iostream>
+#include<iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
