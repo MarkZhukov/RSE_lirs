@@ -74,7 +74,3 @@ int edgePhoto() {
     return 0;
 }
 
-int main() {
-    edgePhoto();
-    return 0;
-}
