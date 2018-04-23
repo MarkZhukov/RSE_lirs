@@ -16,7 +16,7 @@ find_package(PCL 1.8 REQUIRED COMPONENTS common io)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(SOURCE_FILES src/edges.cpp src/cstyle.cpp src/pcl/pcl.cpp)
+set(SOURCE_FILES src/edges.cpp src/cstyle.cpp src/pcl/pcl.cpp src/calibration/stereo/calib_from_yaml.cpp)
 add_executable(RSE_lirs ${SOURCE_FILES})
 
 

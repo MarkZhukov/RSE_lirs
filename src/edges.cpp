@@ -9,7 +9,7 @@ using namespace std;
 using namespace cv;
 
 
-int edgeFromCamera(){
+int edgeFromCamera() {
     VideoCapture cap(0);
     if(!cap.isOpened())
         return -1;
@@ -27,6 +27,7 @@ int edgeFromCamera(){
         imshow("edges", edges);
         if(cv::waitKey(30) >= 0) break;
     }
+    return 0;
 }
 
 
@@ -74,7 +75,3 @@ int edgePhoto() {
     return 0;
 }
 
-int main(){
-    edgeFromCamera();
-    return 0;
-}
