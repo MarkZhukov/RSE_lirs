@@ -110,9 +110,9 @@ void undistorting(Mat &imgL, Mat &imgR){
 
     //fisheye::undistortPoints(imgR,imgUndistortedR,KR,DR,PR,RR);
     //fisheye::undistortImage(imgR,imgUndistortedR,KR,DR,PR);
-    //imgR = imgUndistortedR.clone();
+    imgR = imgUndistortedR.clone();
 
-    //imshow("right", imgR);
+    imshow("right", imgR);
     waitKey(0);
 
 
