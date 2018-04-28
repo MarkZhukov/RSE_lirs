@@ -21,7 +21,7 @@ Size size(744,480);
 double stereo_kr_data[3][3] = { {339.235023,0.000000,361.816561},
                                 {0.000000,339.854855,298.800560},
                                 {0.000000,0.000000,1.000000} };
-double stereo_dr_data[1][4] =  {-0.227741, 0.040889, -0.001854, 0.001510};
+double stereo_dr_data[1][5] =  {-0.227741, 0.040889, -0.001854, 0.001510, 0.000000};
 double stereo_rr_data[3][3] = { {0.999910, 0.001597, -0.013296},
                                 {-0.001650, 0.999991, -0.003962},
                                 {0.013290, 0.003984, 0.999904} };
@@ -36,7 +36,7 @@ double stereo_kl_data[3][3] = {
         {0.000000, 351.947433, 202.905149},
         {0.000000, 0.000000, 1.000000}
 };
-double stereo_dl_data[1][4] =  {-0.225886, 0.043241, 0.003057, -0.005799};
+double stereo_dl_data[1][5] =  {-0.225886, 0.043241, 0.003057, -0.005799,0.000000};
 double stereo_rl_data[3][3] = {
         {0.991289, -0.001251, 0.131698,},
         {0.000727, 0.999992, 0.004030},
@@ -86,21 +86,34 @@ void undistorting(Mat &imgL, Mat &imgR){
     Mat imgUndistortedL(imgL.size(),imgL.type());
 
     Mat KL(3,3,CV_64F,stereo_kl_data);
-    Mat DL(1,4,CV_64F,stereo_dl_data);
+    Mat DL(1,5,CV_64F,stereo_dl_data);
     Mat RL(3,3,CV_64F,stereo_rl_data);
     Mat PL(3,4,CV_64F,stereo_pl_data);
-    undistort(imgL,imgUndistortedL,KL,DL);
+    cvtColor(imgL, imgL, CV_BGR2GRAY);
+
+    undistort(imgL,imgUndistortedL,KL,DL,PL);
     //imshow("left", imgUndistortedL);
-    imgL = imgUndistortedL;
+    imgL = imgUndistortedL.clone();
+
+    Mat chg;
 
 
     Mat KR(3,3,CV_64F,stereo_kr_data);
-    Mat DR(1,4,CV_64F,stereo_dr_data);
+    Mat DR(1,5,CV_64F,stereo_dr_data);
     Mat RR(3,3,CV_64F,stereo_rr_data);
     Mat PR(3,4,CV_64F,stereo_pr_data);
-    undistort(imgR,imgUndistortedR,KR,DR);
-    //imshow("right", imgUndistortedR);
-    imgR = imgUndistortedR;
+    cvtColor(imgR, imgR, CV_RGB2GRAY,2);
+
+
+    undistort(imgR,imgUndistortedR,KR,DR,PR);
+    //imgR = imgUndistortedR.clone();
+
+    //fisheye::undistortPoints(imgR,imgUndistortedR,KR,DR,PR,RR);
+    //fisheye::undistortImage(imgR,imgUndistortedR,KR,DR,PR);
+    imgR = imgUndistortedR.clone();
+
+    imshow("right", imgR);
+    waitKey(0);
 
 
 }
@@ -109,17 +122,20 @@ void undistorting(Mat &imgL, Mat &imgR){
 
 void calib_img(){
     //calibrateCamera(frame,frame,Size(744,480),calibMatrix,distrCoefs);
+
     Mat imgL = imread("../img/left3.jpg");
     Mat imgR = imread("../img/right3.jpg");
+    Mat conv;
 
     Mat disp, disp8;
-
-    cvtColor(imgL, imgL, CV_BGR2GRAY);
-    cvtColor(imgR, imgR, CV_BGR2GRAY);
 
 
     undistorting(imgL,imgR);
     //cout << imgL.size() << imgR.size() << endl;
+
+
+    Ptr<StereoSGBM> sgbm = StereoSGBM::create();
+    sgbm->compute(imgL,imgR,disp);
 
 
 
@@ -133,7 +149,7 @@ void calib_img(){
     sbm->setMinDisparity(-39);
     sbm->setPreFilterCap(61);
     sbm->setPreFilterSize(5);
-    sbm->compute(imgL,imgR, disp);
+    //sbm->compute(imgL,imgR, disp);
 
 
     normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);

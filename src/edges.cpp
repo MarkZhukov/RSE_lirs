@@ -68,7 +68,6 @@ int edgePhoto() {
         Sobel(edges,edges,edges.depth(),1,0);
 
         //Canny(edges, edges, 0, 30, 3);
-
         imshow("edges", edges);
         if(waitKey(30) >= 0) break;
     }
