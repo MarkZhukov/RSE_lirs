@@ -125,7 +125,7 @@ void calib_img(){
 
     Mat imgL = imread("../img/left3.jpg");
     Mat imgR = imread("../img/right3.jpg");
-    Mat conv;
+
 
     Mat disp, disp8;
 
