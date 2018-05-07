@@ -81,38 +81,6 @@ double p_left[3][4] = {
     fs.release();
 ////////////////////////////////////////////////////////////////////////*/
 
-int edgePhoto(Mat &img) {
-    //VideoCapture cap(0);
-
-    //if(!cap.isOpened())
-    //  return -1;
-
-    Mat edges;
-    //namedWindow("edges", 1);
-
-        //Mat frame = imread(
-        //        "/Users/lucky.mz/Documents/GitHub/RSE_lirs/img/left3.jpg",1
-        //);
-        //cap >> frame; // get a new frame from camera
-        cvtColor(img, img,CV_BGR2GRAY);
-
-        //bilateralFilter(edges, edges,10,10*2,10*2);
-
-        GaussianBlur(img, img, Size(7, 7), 1.5, 1.5);
-        //blur(edges,edges,Size(7,7));
-        //medianBlur( edges, edges, 7);
-
-        //fastNlMeansDenoisingColored(edges,edges,3,3,7,21);
-        //cvtColor(edges, edges,CV_BGR2GRAY);
-
-
-        Sobel(img, img, img.depth(), 1, 0);
-
-       // Canny(edges, edges, 0, 30, 3);
-        imshow("edges", img);
-
-    return 0;
-}
 
 void undistorting(Mat &imgL, Mat &imgR){
 
@@ -172,8 +140,8 @@ void calib_img(){
 /**
     auto sgbmL = StereoSGBM::create(
             0,160,5,
-            (3 * 8 *5)*(3 * 8 * 5),
-            (3 * 32 *5)*(3 * 32 * 5),
+            (3 * 8 *3)*(3 * 8 * 3),
+            (3 * 32 *3)*(3 * 32 * 3),
             1,
             63,
             15,
