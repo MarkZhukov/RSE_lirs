@@ -6,11 +6,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
+#include <opencv2/ximgproc.hpp>
 #include <opencv/cv.hpp>
 
 
 using namespace cv;
 using namespace std;
+
 
 
 //Mat frame;
@@ -79,6 +81,38 @@ double p_left[3][4] = {
     fs.release();
 ////////////////////////////////////////////////////////////////////////*/
 
+int edgePhoto(Mat &img) {
+    //VideoCapture cap(0);
+
+    //if(!cap.isOpened())
+    //  return -1;
+
+    Mat edges;
+    //namedWindow("edges", 1);
+
+        //Mat frame = imread(
+        //        "/Users/lucky.mz/Documents/GitHub/RSE_lirs/img/left3.jpg",1
+        //);
+        //cap >> frame; // get a new frame from camera
+        cvtColor(img, img,CV_BGR2GRAY);
+
+        //bilateralFilter(edges, edges,10,10*2,10*2);
+
+        GaussianBlur(img, img, Size(7, 7), 1.5, 1.5);
+        //blur(edges,edges,Size(7,7));
+        //medianBlur( edges, edges, 7);
+
+        //fastNlMeansDenoisingColored(edges,edges,3,3,7,21);
+        //cvtColor(edges, edges,CV_BGR2GRAY);
+
+
+        Sobel(img, img, img.depth(), 1, 0);
+
+       // Canny(edges, edges, 0, 30, 3);
+        imshow("edges", img);
+
+    return 0;
+}
 
 void undistorting(Mat &imgL, Mat &imgR){
 
@@ -102,7 +136,7 @@ void undistorting(Mat &imgL, Mat &imgR){
     Mat DR(1,5,CV_64F,stereo_dr_data);
     Mat RR(3,3,CV_64F,stereo_rr_data);
     Mat PR(3,4,CV_64F,stereo_pr_data);
-    cvtColor(imgR, imgR, CV_RGB2GRAY,2);
+    cvtColor(imgR, imgR, CV_RGB2GRAY);
 
 
     undistort(imgR,imgUndistortedR,KR,DR,PR);
@@ -112,9 +146,11 @@ void undistorting(Mat &imgL, Mat &imgR){
     //fisheye::undistortImage(imgR,imgUndistortedR,KR,DR,PR);
     imgR = imgUndistortedR.clone();
 
-    imshow("right", imgR);
-    waitKey(0);
+    //imwrite("../img/leftUnd.jpg",imgUndistortedL);
+    //imwrite("../img/rightUnd.jpg",imgUndistortedR);
 
+    //imshow("right", imgR);
+    //waitKey(0);
 
 }
 
@@ -123,23 +159,52 @@ void undistorting(Mat &imgL, Mat &imgR){
 void calib_img(){
     //calibrateCamera(frame,frame,Size(744,480),calibMatrix,distrCoefs);
 
-    Mat imgL = imread("../img/left3.jpg");
-    Mat imgR = imread("../img/right3.jpg");
+    Mat imgL = imread("../img/left_1.jpg");
+    Mat imgR = imread("../img/right_1.jpg");
 
 
-    Mat disp, disp8;
+    Mat dispL,dispR, disp8;
 
 
     undistorting(imgL,imgR);
     //cout << imgL.size() << imgR.size() << endl;
 
+/**
+    auto sgbmL = StereoSGBM::create(
+            0,160,5,
+            (3 * 8 *5)*(3 * 8 * 5),
+            (3 * 32 *5)*(3 * 32 * 5),
+            1,
+            63,
+            15,
+            0,
+            2,
+            StereoSGBM::MODE_SGBM_3WAY
+    );
+    auto sgbmR = ximgproc::createRightMatcher(sgbmL);
+    auto wls_filter = ximgproc::createDisparityWLSFilter(sgbmL);
+    double lambda = 8000;
+    double sigma = 1.4;
+    wls_filter->setLambda(lambda);
+    wls_filter->setSigmaColor(sigma);
+    sgbmL->compute(imgL,imgR,dispL);
+    sgbmR->compute(imgL,imgR,dispR);
+    //dispL.convertTo(dispL,CV_16S);
+    //dispR.convertTo(dispR,CV_16S);
 
-    Ptr<StereoSGBM> sgbm = StereoSGBM::create();
-    sgbm->compute(imgL,imgR,disp);
+    Mat filteredImg;
+    wls_filter->filter(dispR, imgR, filteredImg, dispL);
+    //normalize(filteredImg,filteredImg,255,0,NORM_MINMAX,CV_8U);
+    normalize(filteredImg, filteredImg, 0, 255, CV_MINMAX, CV_8U);
+    imshow("dsp",filteredImg);
+    GaussianBlur(filteredImg, filteredImg, Size(7, 7), 1.5, 1.5);
+    Sobel(filteredImg, filteredImg, filteredImg.depth(), 1, 0,5);
+    //Canny(filteredImg, filteredImg, 0, 30, 3);
+    imshow("edg",filteredImg);
 
-
-
-    Ptr<StereoBM> sbm = cv::StereoBM::create(16, 5);
+*/
+///*
+    auto sbm = cv::StereoBM::create(16, 5);
 
     sbm->setDisp12MaxDiff(1);
     sbm->setSpeckleRange(8);
@@ -149,15 +214,29 @@ void calib_img(){
     sbm->setMinDisparity(-39);
     sbm->setPreFilterCap(61);
     sbm->setPreFilterSize(5);
-    //sbm->compute(imgL,imgR, disp);
+    sbm->compute(imgL,imgR, dispL);
 
+    auto sbmR = ximgproc::createRightMatcher(sbm);
+    sbmR->compute(imgL,imgR,dispR);
 
-    normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);
+    auto wls_filter = ximgproc::createDisparityWLSFilter(sbm);
+    double lambda = 80000;
+    double sigma = 1.2;
+    wls_filter->setLambda(lambda);
+    wls_filter->setSigmaColor(sigma);
+    wls_filter->filter(dispR, imgR, disp8, dispL);
+    //disp8 = dispL;
+    normalize(disp8, disp8, 0, 255, CV_MINMAX, CV_8U);
+
 
     imshow("left", imgL);
     imshow("right", imgR);
     imshow("disp", disp8);
-
+      GaussianBlur(disp8, disp8, Size(7, 7), 1.5, 1.5);
+    //Sobel(disp8, disp8, disp8.depth(), 1, 0,5);
+    Canny(disp8, disp8, 0, 30, 3);
+    imshow("edg",disp8);
+    //*/
     cv::waitKey(0);
 
 }
