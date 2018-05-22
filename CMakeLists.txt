@@ -3,7 +3,7 @@ project(RSE_lirs)
 
 #find_package(OpenCV REQUIRED) # after project()
 
-#set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 #add_executable(RSE_lirs main.cpp)
 
@@ -16,7 +16,7 @@ find_package(PCL 1.8 REQUIRED COMPONENTS common io)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(SOURCE_FILES src/edges.cpp src/cstyle.cpp src/pcl/pcl.cpp src/calibration/stereo/calib_from_yaml.cpp src/grid.cpp)
+set(SOURCE_FILES src/edges.cpp src/cstyle.cpp src/pcl/pcl.cpp src/calibration/stereo/calib_from_yaml.cpp src/grid.cpp src/qr_detect.cpp)
 add_executable(RSE_lirs ${SOURCE_FILES})
 
 

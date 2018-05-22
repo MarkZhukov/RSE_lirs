@@ -87,27 +87,28 @@ void undistorting(Mat &imgL, Mat &imgR){
     Mat imgUndistortedR(imgR.size(),imgR.type());
     Mat imgUndistortedL(imgL.size(),imgL.type());
 
+    Mat mapL1, mapL2;
     Mat KL(3,3,CV_64F,stereo_kl_data);
     Mat DL(1,5,CV_64F,stereo_dl_data);
     Mat RL(3,3,CV_64F,stereo_rl_data);
     Mat PL(3,4,CV_64F,stereo_pl_data);
-    cvtColor(imgL, imgL, CV_BGR2GRAY);
-
-    undistort(imgL,imgUndistortedL,KL,DL,PL);
+    initUndistortRectifyMap(KL,DL,RL,PL,imgL.size(),mapL1.type(),mapL1,mapL2);
+    remap(imgL,imgUndistortedL,mapL1,mapL2,INTER_LINEAR);
+    //undistort(imgL,imgUndistortedL,KL,DL);
     //imshow("left", imgUndistortedL);
     imgL = imgUndistortedL.clone();
 
-    Mat chg;
 
-
+    Mat mapR1, mapR2;
     Mat KR(3,3,CV_64F,stereo_kr_data);
     Mat DR(1,5,CV_64F,stereo_dr_data);
     Mat RR(3,3,CV_64F,stereo_rr_data);
     Mat PR(3,4,CV_64F,stereo_pr_data);
-    cvtColor(imgR, imgR, CV_RGB2GRAY);
 
+    initUndistortRectifyMap(KR,DR,RR,PR,imgL.size(),mapR1.type(),mapR1,mapR2);
+    remap(imgR,imgUndistortedR,mapR1,mapR2,INTER_LINEAR);
 
-    undistort(imgR,imgUndistortedR,KR,DR,PR);
+    //undistort(imgR,imgUndistortedR,KR,DR);
     //imgR = imgUndistortedR.clone();
 
     //fisheye::undistortPoints(imgR,imgUndistortedR,KR,DR,PR,RR);
@@ -127,14 +128,19 @@ void undistorting(Mat &imgL, Mat &imgR){
 void calib_img(){
     //calibrateCamera(frame,frame,Size(744,480),calibMatrix,distrCoefs);
 
+    //Mat imgL = imread("../img/lefttest.png");
+    //Mat imgR = imread("../img/righttest.png");
     Mat imgL = imread("../img/left_1.jpg");
     Mat imgR = imread("../img/right_1.jpg");
+
 
 
     Mat dispL,dispR, disp8;
 
 
     undistorting(imgL,imgR);
+    cvtColor(imgR, imgR, CV_BGR2GRAY);
+    cvtColor(imgL, imgL, CV_BGR2GRAY);
     //cout << imgL.size() << imgR.size() << endl;
 
 /**
@@ -151,17 +157,17 @@ void calib_img(){
     );
     auto sgbmR = ximgproc::createRightMatcher(sgbmL);
     auto wls_filter = ximgproc::createDisparityWLSFilter(sgbmL);
-    double lambda = 8000;
-    double sigma = 1.4;
+    double lambda = 80000;
+    double sigma = 1.6;
     wls_filter->setLambda(lambda);
     wls_filter->setSigmaColor(sigma);
     sgbmL->compute(imgL,imgR,dispL);
     sgbmR->compute(imgL,imgR,dispR);
-    //dispL.convertTo(dispL,CV_16S);
-    //dispR.convertTo(dispR,CV_16S);
+    dispL.convertTo(dispL,CV_16S);
+    dispR.convertTo(dispR,CV_16S);
 
     Mat filteredImg;
-    wls_filter->filter(dispR, imgR, filteredImg, dispL);
+    wls_filter->filter(dispL, imgL, filteredImg, dispR);
     //normalize(filteredImg,filteredImg,255,0,NORM_MINMAX,CV_8U);
     normalize(filteredImg, filteredImg, 0, 255, CV_MINMAX, CV_8U);
     imshow("dsp",filteredImg);
@@ -171,28 +177,28 @@ void calib_img(){
     imshow("edg",filteredImg);
 
 */
-///*
+///**
     auto sbm = cv::StereoBM::create(16, 5);
 
-    sbm->setDisp12MaxDiff(1);
+    sbm->setDisp12MaxDiff(110);  //1
     sbm->setSpeckleRange(8);
     sbm->setSpeckleWindowSize(0);
     sbm->setUniquenessRatio(0);
-    sbm->setTextureThreshold(507);
+    sbm->setTextureThreshold(107); //507
     sbm->setMinDisparity(-39);
     sbm->setPreFilterCap(61);
-    sbm->setPreFilterSize(5);
-    sbm->compute(imgL,imgR, dispL);
+    sbm->setPreFilterSize(7); //5
+    sbm->compute(imgL,imgR, dispR);
 
     auto sbmR = ximgproc::createRightMatcher(sbm);
-    sbmR->compute(imgL,imgR,dispR);
+    sbmR->compute(imgL,imgR,dispL);
 
     auto wls_filter = ximgproc::createDisparityWLSFilter(sbm);
-    double lambda = 80000;
-    double sigma = 1.2;
+    double lambda = 100000;
+    double sigma = 0.6;
     wls_filter->setLambda(lambda);
     wls_filter->setSigmaColor(sigma);
-    wls_filter->filter(dispR, imgR, disp8, dispL);
+    wls_filter->filter(dispL, imgL, disp8, dispR);
     //disp8 = dispL;
     normalize(disp8, disp8, 0, 255, CV_MINMAX, CV_8U);
 
@@ -201,8 +207,8 @@ void calib_img(){
     imshow("right", imgR);
     imshow("disp", disp8);
       GaussianBlur(disp8, disp8, Size(7, 7), 1.5, 1.5);
-    //Sobel(disp8, disp8, disp8.depth(), 1, 0,5);
-    Canny(disp8, disp8, 0, 30, 3);
+    Sobel(disp8, disp8, disp8.depth(), 1, 0,3);
+    //Canny(disp8, disp8, 0, 30, 3);
     imshow("edg",disp8);
     //*/
     cv::waitKey(0);
@@ -210,7 +216,19 @@ void calib_img(){
 }
 
 
+void filter() {
+    Mat imgL = imread("../img/left_1.jpg");
+    Mat imgR = imread("../img/right_1.jpg");
+    cvtColor(imgR, imgR, CV_BGR2RGB);
+    cvtColor(imgL, imgL, CV_BGR2RGB);
+    undistorting(imgL,imgR);
+    imshow("left", imgL);
+    imshow("right", imgR);
+    waitKey(0);
+
+}
 
 int main(){
+    //filter();
     calib_img();
 }
